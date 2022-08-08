@@ -26,6 +26,11 @@ async def on_ready():
 
 
 @client.event
+async def on_member_join(member):
+    print(f'hello {member}, have fun!')
+
+
+@client.event
 async def on_message(message):
     if message.author == client.user:
         return
