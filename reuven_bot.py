@@ -5,12 +5,12 @@ import requests
 import json
 import random
 
+bot_prefix = "R"
+client = commands.Bot(command_prefix=bot_prefix)
 
-prefix = "^"
-client = commands.Bot(command_prefix=prefix)
-
-sad_msgs = ["Anger", "Emptiness", "Frustration", "Inadequacy", "Helplessness", "Fear", "Guilt", "Loneliness", "Depression",
-         "Overwhelmed", "Resentment", "Failure", "Sadness", "Jealousy"]
+sad_msgs = ["Anger", "Emptiness", "Frustration", "Inadequacy", "Helplessness", "Fear", "Guilt", "Loneliness",
+            "Depression",
+            "Overwhelmed", "Resentment", "Failure", "Sadness", "Jealousy"]
 
 
 def quote():
@@ -44,28 +44,43 @@ async def on_message(message):
 
 
 @client.command()
-async def on_message(message):
-    if message.content.startswith(prefix):
-        if message.content.startswith(f"{prefix}help"):
-            await message.channel.send(
-                "available commands: \n quote - send a random motivational quote \n calc - calculate")
+async def help_me(ctx):
+    if ctx.author == client.user:
+        await ctx.send("available commands: \n quote - send a random motivational quote \n calc - calculate")
 
-        if message.content.startswith(f"{prefix}quote"):
-            random_quote = quote()
-            await message.channel.send(random_quote)
 
-        expiration = str(message.content.startswith(f"{prefix}calc"))
-        calculate = expiration.replace(f"{prefix}calc", "")
-        if expiration:
-            await message.channel.send(f"the answer is:{eval(calculate)}")
+@client.command()
+async def clear(ctx, amount=1):
+    await ctx.channel.purge(limit=amount)
 
-        if message.content == 'hello':
-            await message.channel.send(f'Hi {message.author}')
-        if message.content == 'bye':
-            await message.channel.send(f'Goodbye {message.author}')
+@client.command()
+async def kick(ctx, member: discord.Member, * , reason=None):
+    await member.kick(reason=reason)
 
-    if any(sad_msg in message.content for sad_msg in sad_msgs):
-        await message.channel.send(random.choice(sad_msgs))
+@client.command()
+async def ban(ctx, member: discord.Member, * , reason=None):
+    await member.ban(reason=reason)
+
+
+@client.command()
+async def ping(ctx):
+    await ctx.send(f"ping is equal to {round(client.latency * 1000)}ms")
+    # if message.content.startswith(f"{prefix}quote"):
+    #     random_quote = quote()
+    #     await message.channel.send(random_quote)
+    #
+    # expiration = str(message.content.startswith(f"{prefix}calc"))
+    # calculate = expiration.replace(f"{prefix}calc", "")
+    # if expiration:
+    #     await message.channel.send(f"the answer is:{eval(calculate)}")
+    #
+    # if message.content == 'hello':
+    #     await message.channel.send(f'Hi {message.author}')
+    # if message.content == 'bye':
+    #     await message.channel.send(f'Goodbye {message.author}')
+    #
+    # if any(sad_msg in message.content for sad_msg in sad_msgs):
+    #     await message.channel.send(random.choice(sad_msgs))
 
 
 @client.command()
