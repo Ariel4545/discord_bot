@@ -9,7 +9,7 @@ import random
 prefix = "^"
 client = commands.Bot(command_prefix=prefix)
 
-tomer = ["Anger", "Emptiness", "Frustration", "Inadequacy", "Helplessness", "Fear", "Guilt", "Loneliness", "Depression",
+sad_msgs = ["Anger", "Emptiness", "Frustration", "Inadequacy", "Helplessness", "Fear", "Guilt", "Loneliness", "Depression",
          "Overwhelmed", "Resentment", "Failure", "Sadness", "Jealousy"]
 
 
@@ -64,8 +64,8 @@ async def on_message(message):
         if message.content == 'bye':
             await message.channel.send(f'Goodbye {message.author}')
 
-    if any(tom in message.content for tom in tomer):
-        await message.channel.send(random.choice(tomer))
+    if any(sad_msg in message.content for sad_msg in sad_msgs):
+        await message.channel.send(random.choice(sad_msgs))
 
 
 @client.command()
