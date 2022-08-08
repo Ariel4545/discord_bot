@@ -5,9 +5,9 @@ import requests
 import json
 import random
 
-client = discord.Client()
+
 prefix = "^"
-bot = commands.Bot(command_prefix=prefix)
+client = commands.Bot(command_prefix=prefix)
 
 tomer = ["Anger", "Emptiness", "Frustration", "Inadequacy", "Helplessness", "Fear", "Guilt", "Loneliness", "Depression",
          "Overwhelmed", "Resentment", "Failure", "Sadness", "Jealousy"]
@@ -33,12 +33,12 @@ async def on_message(message):
         await message.channel.send("me😈")
 
 
-@bot.command()
+@client.command()
 async def on_message(message):
     if message.content.startswith(prefix):
         if message.content.startswith(f"{prefix}help"):
             await message.channel.send(
-                "availbe commands: \n quote - send a random motivational qoute \n calc - caculate")
+                "available commands: \n quote - send a random motivational quote \n calc - calculate")
 
         if message.content.startswith(f"{prefix}quote"):
             random_quote = quote()
@@ -58,7 +58,7 @@ async def on_message(message):
         await message.channel.send(random.choice(tomer))
 
 
-@bot.command()
+@client.command()
 async def square(ctx, arg):
     print(arg)
     await ctx.send(int(arg) ** 2)
