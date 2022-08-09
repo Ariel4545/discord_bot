@@ -1,70 +1,87 @@
 import discord
 from discord.ext import commands
-import os
 import requests
 import json
-import random
 
-bot_prefix = "R"
-client = commands.Bot(command_prefix=bot_prefix)
+
+bot_prefix = '^'
+bot = commands.Bot(command_prefix=bot_prefix)
 
 sad_msgs = ["Anger", "Emptiness", "Frustration", "Inadequacy", "Helplessness", "Fear", "Guilt", "Loneliness",
             "Depression",
             "Overwhelmed", "Resentment", "Failure", "Sadness", "Jealousy"]
 
 
-def quote():
+@bot.command()
+async def quote(ctx):
     response = requests.get("https://zenquotes.io/api/random")
     json_data = json.loads(response.text)
-    quote = json_data[0]['q'] + " -" + json_data[0]['a']
-    return quote
+    random_quote = json_data[0]['q'] + " -" + json_data[0]['a']
+    await ctx.channel.send(random_quote)
 
 
-@client.event
+@bot.event
 async def on_ready():
-    print("we have logged in as {0.user}".format(client))
+    print(f"successfully logged in as {bot.user}")
 
 
-@client.event
+@bot.event
 async def on_member_join(member):
     print(f'hello {member}, have fun!')
 
 
-@client.event
+@bot.event
 async def on_member_remove(member):
     print(f'\'nothing lasts forever, goodbye {member}!\'')
 
+@bot.command()
+async def add(ctx, a: int, b: int):
+    await ctx.send(a + b)
 
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
     if message.content.startswith("who is the goat?"):
         await message.channel.send("me😈")
 
 
-@client.command()
+@bot.command()
 async def help_me(ctx):
-    if ctx.author == client.user:
-        await ctx.send("available commands: \n quote - send a random motivational quote \n calc - calculate")
+    await ctx.send("available commands: \n quote - send a random motivational quote \n calc - calculate")
 
 
-@client.command()
+@bot.command()
 async def clear(ctx, amount=1):
     await ctx.channel.purge(limit=amount)
 
-@client.command()
-async def kick(ctx, member: discord.Member, * , reason=None):
+
+@bot.command()
+async def kick(ctx, member: discord.Member, *, reason=None):
     await member.kick(reason=reason)
+    await ctx.send(f'kicked {member.mention}')
 
-@client.command()
-async def ban(ctx, member: discord.Member, * , reason=None):
+@bot.command()
+async def ban(ctx, member: discord.Member, *, reason=None):
     await member.ban(reason=reason)
+    await ctx.send(f'banned {member.mention}')
 
 
-@client.command()
+@bot.command()
+async def unban(ctx, *,member):
+    banned_users = await ctx.guild.bans()
+    member_name, member_tag = member.split('#')
+    for ban_entry in banned_users:
+        user = ban_entry.user
+        if (user.name, user.discriminator) == (member_name, member_tag):
+            await ctx.guild.unban(user)
+            await ctx.send(f'Unbanned {user.name}#{user.discriminator}')
+            return
+
+
+@bot.command()
 async def ping(ctx):
-    await ctx.send(f"ping is equal to {round(client.latency * 1000)}ms")
+    await ctx.send(f"ping is equal to {round(bot.latency * 1000)}ms")
     # if message.content.startswith(f"{prefix}quote"):
     #     random_quote = quote()
     #     await message.channel.send(random_quote)
@@ -83,10 +100,11 @@ async def ping(ctx):
     #     await message.channel.send(random.choice(sad_msgs))
 
 
-@client.command()
+@bot.command()
 async def square(ctx, arg):
     print(arg)
     await ctx.send(int(arg) ** 2)
 
 
-client.run('OTcxMzc2NzczNzY4MDUyODE4.YnJnHg.fxdAgG7NWAseI1AOxS6CN1jVtfY')
+bot.run('OTcxMzc2NzczNzY4MDUyODE4.YnJnHg.fxdAgG7NWAseI1AOxS6CN1jVtfY')
+
