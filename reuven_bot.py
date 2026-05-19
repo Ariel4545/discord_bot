@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import aiohttp
 import os
+import asyncio
 from dotenv import load_dotenv
 import math_helper
 
@@ -274,6 +275,48 @@ async def convert(ctx, value: float, from_unit: str, to_unit: str):
         await ctx.send(embed=embed)
 
 
+@bot.command()
+async def graph(ctx, *, args: str):
+    """Plots a mathematical function in terms of x (e.g., ^graph x**2 - 4*x -10 10)."""
+    try:
+        # We split by space, and check if the last two elements are numbers
+        parts = args.split()
+        x_min, x_max = -10.0, 10.0
+        expression = args
+        
+        if len(parts) >= 3:
+            try:
+                potential_max = float(parts[-1])
+                potential_min = float(parts[-2])
+                x_min = potential_min
+                x_max = potential_max
+                expression = " ".join(parts[:-2])
+            except ValueError:
+                pass
+                
+        expression = expression.strip()
+        
+        # Offload plotting to thread safely to keep event loop responsive
+        buf = await asyncio.to_thread(math_helper.generate_plot, expression, x_min, x_max)
+        
+        file = discord.File(buf, filename="plot.png")
+        embed = discord.Embed(
+            title="📈 Function Plotter",
+            description=f"Plotted expression: `y = {expression}` over range `[{math_helper.format_num(x_min)}, {math_helper.format_num(x_max)}]`",
+            color=discord.Color.from_rgb(0, 229, 255) # Glowing neon cyan
+        )
+        embed.set_image(url="attachment://plot.png")
+        
+        await ctx.send(embed=embed, file=file)
+    except Exception as e:
+        embed = discord.Embed(
+            title="❌ Graphing Error",
+            description=str(e),
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=embed)
+
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -303,7 +346,8 @@ async def help_me(ctx):
         "`^stats <numbers>` - Detailed statistical profiling on space-separated data\n"
         "`^prime <number>` - Check primality, factorize, and list divisors (max 1B)\n"
         "`^solve <a> <b> [c]` - Solves linear ($ax+b=0$) & quadratic ($ax^2+bx+c=0$) equations\n"
-        "`^convert <val> <from> <to>` - High-precision conversions (Temp, Length, Weight, Data)\n\n"
+        "`^convert <val> <from> <to>` - High-precision conversions (Temp, Length, Weight, Data)\n"
+        "`^graph <expr> [min] [max]` - Plots single-variable curves (e.g., `^graph sin(x) / x -5 5`)\n\n"
         "**🛠 Utility & Moderation**\n"
         "`^ping` - Check bot latency\n"
         "`^quote` - Get a random motivational quote\n"
