@@ -1,5 +1,12 @@
 import math
 import simpleeval
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import io
+import ast
+import operator
 
 def format_num(val):
     """
@@ -330,3 +337,124 @@ def convert_units(value, from_unit, to_unit):
         return value * from_rate_data / to_rate_data
         
     raise ValueError(f"Unsupported or incompatible units: '{from_unit}' to '{to_unit}'")
+
+def generate_plot(expression: str, x_min: float = -10, x_max: float = 10) -> io.BytesIO:
+    """
+    Safely parses and renders a single-variable expression in terms of 'x'
+    to a Discord-themed dark mode plot in a memory buffer.
+    """
+    if len(expression) > 100:
+        raise ValueError("Expression is too long (maximum 100 characters)!")
+
+    if x_min >= x_max:
+        raise ValueError("Minimum x value must be less than maximum x value.")
+
+    # 1. Evaluate coordinate values safely using vectorized NumPy
+    # Generate 500 smooth sample points
+    x_coords = np.linspace(x_min, x_max, 500)
+    
+    names = {
+        'x': x_coords,
+        'pi': np.pi,
+        'π': np.pi,
+        'e': np.e,
+        'tau': 2 * np.pi,
+        'τ': 2 * np.pi
+    }
+
+    # Vectorized NumPy functions mapped to safe names
+    functions = {
+        'sin': np.sin,
+        'cos': np.cos,
+        'tan': np.tan,
+        'asin': np.arcsin,
+        'acos': np.arccos,
+        'atan': np.arctan,
+        'sinh': np.sinh,
+        'cosh': np.cosh,
+        'tanh': np.tanh,
+        'radians': np.radians,
+        'rad': np.radians,
+        'degrees': np.degrees,
+        'deg': np.degrees,
+        'sqrt': np.sqrt,
+        'cbrt': np.cbrt,
+        'abs': np.abs,
+        'log': lambda x, base=None: np.log(x) if base is None else np.log(x) / np.log(base),
+        'log10': np.log10,
+        'log2': np.log2,
+        'ln': np.log,
+        'exp': np.exp,
+        'ceil': np.ceil,
+        'floor': np.floor,
+        'round': np.round,
+    }
+
+    # Safe evaluation
+    try:
+        # Override safe check operators that fail on NumPy vectorized evaluation
+        operators = simpleeval.DEFAULT_OPERATORS.copy()
+        operators.update({
+            ast.Pow: operator.pow,
+            ast.Add: operator.add,
+            ast.Mult: operator.mul,
+            ast.LShift: operator.lshift,
+            ast.RShift: operator.rshift,
+        })
+        s = simpleeval.SimpleEval(names=names, functions=functions, operators=operators)
+        y_coords = s.eval(expression)
+    except Exception as e:
+        raise ValueError(f"Failed to evaluate expression: {str(e)}")
+
+    # Ensure y_coords is a NumPy array
+    if isinstance(y_coords, (int, float)):
+        # Constant line
+        y_coords = np.full_like(x_coords, y_coords)
+    elif not isinstance(y_coords, np.ndarray):
+        raise ValueError("Expression did not return a numeric sequence.")
+
+    # 2. Render plot using custom Discord-themed Dark Mode styles
+    fig, ax = plt.subplots(figsize=(7, 4.5), facecolor='#313338')
+    ax.set_facecolor('#313338')
+
+    # Draw translucent grid lines
+    ax.grid(True, color='#4e5058', linestyle='--', linewidth=0.6, alpha=0.4)
+
+    # Plot the vibrant neon cyan line curve
+    ax.plot(x_coords, y_coords, color='#00e5ff', linewidth=2.5, label=expression)
+
+    # Spine styling
+    for spine in ax.spines.values():
+        spine.set_color('#4e5058')
+        spine.set_linewidth(0.8)
+        
+    # Configure axes tick/label styles
+    ax.tick_params(colors='#ffffff', labelsize=9)
+    ax.xaxis.label.set_color('#ffffff')
+    ax.yaxis.label.set_color('#ffffff')
+    
+    # Smart range clipping to ignore vertical asymptote spikes
+    finite_mask = np.isfinite(y_coords)
+    valid_y = y_coords[finite_mask]
+    if len(valid_y) > 0:
+        y_min_val, y_max_val = np.percentile(valid_y, [2, 98])
+        margin = (y_max_val - y_min_val) * 0.1
+        if margin == 0:
+            margin = 1.0
+        ax.set_ylim(y_min_val - margin, y_max_val + margin)
+    else:
+        ax.set_ylim(-10, 10)
+
+    ax.set_xlim(x_min, x_max)
+
+    # Set title styled cleanly in white
+    ax.set_title(f"Plot of y = {expression}", color='#ffffff', fontsize=12, pad=12, fontweight='bold')
+    
+    # Save directly to memory buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=120, facecolor='#313338')
+    buf.seek(0)
+    
+    plt.close(fig)
+    
+    return buf
