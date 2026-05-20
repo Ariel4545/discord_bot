@@ -458,3 +458,69 @@ def generate_plot(expression: str, x_min: float = -10, x_max: float = 10) -> io.
     plt.close(fig)
     
     return buf
+
+
+def generate_stats_plot(numbers) -> io.BytesIO:
+    """
+    Generates a premium Discord dark-mode dual subplot (Histogram + Box plot)
+    for a given list of numbers.
+    """
+    if len(numbers) < 2:
+        raise ValueError("Need at least 2 numbers to generate a statistical plot.")
+
+    fig, (ax_hist, ax_box) = plt.subplots(1, 2, figsize=(9, 4.5), facecolor='#313338')
+    
+    # 1. Style Histogram Subplot
+    ax_hist.set_facecolor('#313338')
+    ax_hist.grid(True, color='#4e5058', linestyle='--', linewidth=0.6, alpha=0.4)
+    
+    # Generate automatic bins based on Sturges' rule or max 15 bins
+    num_bins = min(max(int(np.ceil(np.log2(len(numbers)) + 1)), 5), 15)
+    
+    ax_hist.hist(numbers, bins=num_bins, color='#00e5ff', edgecolor='#00e5ff', alpha=0.6, linewidth=1.2)
+    ax_hist.set_title("Data Distribution (Histogram)", color='#ffffff', fontsize=11, pad=10, fontweight='bold')
+    ax_hist.set_xlabel("Values", color='#ffffff', fontsize=9)
+    ax_hist.set_ylabel("Frequency", color='#ffffff', fontsize=9)
+    
+    # Style spines
+    for spine in ax_hist.spines.values():
+        spine.set_color('#4e5058')
+        spine.set_linewidth(0.8)
+        
+    ax_hist.tick_params(colors='#ffffff', labelsize=8)
+    
+    # 2. Style Box Plot Subplot
+    ax_box.set_facecolor('#313338')
+    ax_box.grid(True, color='#4e5058', linestyle='--', linewidth=0.6, alpha=0.4)
+    
+    box_props = dict(facecolor='#1e1f22', edgecolor='#00e5ff', linewidth=1.5)
+    whisker_props = dict(color='#4e5058', linewidth=1.2)
+    capprops = dict(color='#4e5058', linewidth=1.2)
+    median_props = dict(color='#ffffff', linewidth=2.0)
+    flier_props = dict(marker='o', markerfacecolor='#00e5ff', markeredgecolor='#00e5ff', markersize=6)
+    
+    ax_box.boxplot(numbers, vert=False, patch_artist=True,
+                   boxprops=box_props, whiskerprops=whisker_props,
+                   capprops=capprops, medianprops=median_props,
+                   flierprops=flier_props)
+                   
+    ax_box.set_title("Box & Whisker Plot", color='#ffffff', fontsize=11, pad=10, fontweight='bold')
+    ax_box.set_xlabel("Values", color='#ffffff', fontsize=9)
+    ax_box.set_yticklabels([]) # Hide vertical tick labels since it's 1D
+    
+    # Style spines
+    for spine in ax_box.spines.values():
+        spine.set_color('#4e5058')
+        spine.set_linewidth(0.8)
+        
+    ax_box.tick_params(colors='#ffffff', labelsize=8)
+    
+    # Adjust layout and save to buffer
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=120, facecolor='#313338')
+    buf.seek(0)
+    
+    plt.close(fig)
+    
+    return buf
