@@ -11,6 +11,7 @@ A robust, modernized utility Discord bot. This version represents a complete ove
   - `^solve <a> <b> [c]` - Solves linear ($ax+b=0$) and quadratic ($ax^2+bx+c=0$) equations (real & complex).
   - `^convert <val> <from> <to>` - High-precision unit converter (Temp, Length, Weight, Data).
   - `^graph <expr> [x_min] [x_max]` - Plots single-variable mathematical functions in terms of `x` (e.g. `^graph sin(x) / x -5 5`) directly in beautiful Discord-themed dark mode.
+  - `^plot_stats <numbers>` - Renders a premium dual-subplot (Frequency Histogram + Box Plot) statistical analysis for a space-separated dataset in Discord dark mode.
 
 ### 🛠 Utility & Moderation
 - **Quote System**: `^quote` fetches motivational quotes via the ZenQuotes API.
