@@ -317,6 +317,51 @@ async def graph(ctx, *, args: str):
         await ctx.send(embed=embed)
 
 
+@bot.command()
+async def plot_stats(ctx, *, numbers: str):
+    """Generates a premium dual subplot (Histogram + Box Plot) for a dataset."""
+    try:
+        num_list = [float(x) for x in numbers.split()]
+        if len(num_list) < 2:
+            raise ValueError("Please provide at least 2 numbers (e.g. `^plot_stats 10 20 30`).")
+            
+        # Offload generating stats plot to thread pool safely
+        buf = await asyncio.to_thread(math_helper.generate_stats_plot, num_list)
+        
+        # Calculate summary statistics to present in the embed
+        stats = math_helper.analyze_stats(num_list)
+        mean_val = math_helper.format_num(stats["mean"])
+        min_val = math_helper.format_num(stats["min"])
+        max_val = math_helper.format_num(stats["max"])
+        
+        file = discord.File(buf, filename="stats_plot.png")
+        embed = discord.Embed(
+            title="📊 Statistical Visualizer",
+            description=f"Generated a dual frequency distribution analysis for your data.",
+            color=discord.Color.from_rgb(0, 229, 255) # Glowing neon cyan
+        )
+        embed.add_field(name="🔢 Sample Size (N)", value=str(stats["count"]), inline=True)
+        embed.add_field(name="📈 Mean (μ)", value=str(mean_val), inline=True)
+        embed.add_field(name="📏 Range", value=f"{min_val} to {max_val}", inline=True)
+        embed.set_image(url="attachment://stats_plot.png")
+        
+        await ctx.send(embed=embed, file=file)
+    except ValueError as ve:
+        embed = discord.Embed(
+            title="❌ Error",
+            description=str(ve) if "at least 2 numbers" in str(ve) else "Please provide a valid list of space-separated numbers (e.g., `^plot_stats 10 20 30`).",
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=embed)
+    except Exception as e:
+        embed = discord.Embed(
+            title="❌ Visualizer Error",
+            description=str(e),
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=embed)
+
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -347,7 +392,8 @@ async def help_me(ctx):
         "`^prime <number>` - Check primality, factorize, and list divisors (max 1B)\n"
         "`^solve <a> <b> [c]` - Solves linear ($ax+b=0$) & quadratic ($ax^2+bx+c=0$) equations\n"
         "`^convert <val> <from> <to>` - High-precision conversions (Temp, Length, Weight, Data)\n"
-        "`^graph <expr> [min] [max]` - Plots single-variable curves (e.g., `^graph sin(x) / x -5 5`)\n\n"
+        "`^graph <expr> [min] [max]` - Plots single-variable curves (e.g., `^graph sin(x) / x -5 5`)\n"
+        "`^plot_stats <numbers>` - Generates dual Frequency Distribution plots (Histogram + Box Plot)\n\n"
         "**🛠 Utility & Moderation**\n"
         "`^ping` - Check bot latency\n"
         "`^quote` - Get a random motivational quote\n"
