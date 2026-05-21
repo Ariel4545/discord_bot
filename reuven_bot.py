@@ -394,6 +394,9 @@ async def help_me(ctx):
         "`^convert <val> <from> <to>` - High-precision conversions (Temp, Length, Weight, Data)\n"
         "`^graph <expr> [min] [max]` - Plots single-variable curves (e.g., `^graph sin(x) / x -5 5`)\n"
         "`^plot_stats <numbers>` - Generates dual Frequency Distribution plots (Histogram + Box Plot)\n\n"
+        "**🎮 Interactive Math Challenge Suite**\n"
+        "`^quiz [difficulty]` - Starts a speed-math challenge (easy/medium/hard)\n"
+        "`^leaderboard` - Displays the server speed-math champions leaderboard\n\n"
         "**🛠 Utility & Moderation**\n"
         "`^ping` - Check bot latency\n"
         "`^quote` - Get a random motivational quote\n"
@@ -459,6 +462,12 @@ async def square(ctx, arg: float):
     embed.add_field(name="Result", value=f"**{math_helper.format_num(res)}**", inline=False)
     await ctx.send(embed=embed)
 
+
+# Load cog extension on startup
+async def setup_hook():
+    await bot.load_extension("math_challenge")
+
+bot.setup_hook = setup_hook
 
 # Start the bot using the token from .env
 token = os.getenv('DISCORD_TOKEN')
