@@ -13,6 +13,11 @@ A robust, modernized utility Discord bot. This version represents a complete ove
   - `^graph <expr> [x_min] [x_max]` - Plots single-variable mathematical functions in terms of `x` (e.g. `^graph sin(x) / x -5 5`) directly in beautiful Discord-themed dark mode.
   - `^plot_stats <numbers>` - Renders a premium dual-subplot (Frequency Histogram + Box Plot) statistical analysis for a space-separated dataset in Discord dark mode.
 
+### 🎮 Interactive Math Challenge Suite
+- **Multiplayer Quizzes (`^quiz [difficulty]`)**: Starts high-speed math competitions in the channel across three customizable difficulties (Easy, Medium, Hard) generating dynamic equations, exponents, and square roots.
+- **Speed Scoring System**: Rewards users for speed and correctness, automatically computing a decay-based speed bonus over a 25-second countdown timer.
+- **Server-Wide Leaderboards (`^leaderboard`)**: Renders a live, real-time ranked list of top performers with custom podium medals (🥇, 🥈, 🥉) and detailed statistics tracking.
+
 ### 🛠 Utility & Moderation
 - **Quote System**: `^quote` fetches motivational quotes via the ZenQuotes API.
 - **Bot Info**: `^ping` to check latency.
